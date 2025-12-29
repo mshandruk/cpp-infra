@@ -25,15 +25,14 @@ git submodule add https://github.com/mshandruk/cpp-infra external/cpp-infra
 ### 2. Configuration for your CMakeLists.txt
 
 ```cmake
-# Enable compilation database generation for clang-tidy
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# 1. Include the infrastructure module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/cpp-infra/cmake")
 include(DevTools)
-
-# 2. Initialize developer targets
-add_dev_tools_targets(INFRA_DIR "${CMAKE_SOURCE_DIR}/external/cpp-infra")
+add_dev_tools_targets(
+        INFRA_DIR "${CMAKE_SOURCE_DIR}/external/cpp-infra"
+        CHECK_DIRS "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/tests"
+)
 ```
 
 ### Don't forget to commit the new submodule
