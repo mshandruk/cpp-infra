@@ -11,6 +11,15 @@ function(add_dev_tools_targets)
     find_program(CLANG_FORMAT_EXE clang-format)
     if (CLANG_FORMAT_EXE)
         set(ALL_SOURCE_FILES "")
+
+        set(SRC_FMT "${CONF_INFRA_DIR}/.clang-format")
+        set(DST_FMT "${CMAKE_SOURCE_DIR}/.clang-format")
+
+        if (EXISTS ${SRC_FMT} AND NOT EXISTS ${DST_FMT})
+            message(STATUS "Creating symlink for clang-format")
+            file(CREATE_LINK "${SRC_FMT}" "${DST_FMT}" SYMBOLIC)
+        endif ()
+
         foreach (DIR ${CONF_CHECK_DIRS})
             file(GLOB_RECURSE FOUND_FILES
                     "${DIR}/*.cpp" "${DIR}/*.hpp" "${DIR}/*.h" "${DIR}/*.cc" "${DIR}/*.cxx"
@@ -18,14 +27,12 @@ function(add_dev_tools_targets)
             list(APPEND ALL_SOURCE_FILES ${FOUND_FILES})
         endforeach ()
 
-        if (EXISTS "${CMAKE_SOURCE_DIR}/.clang-format")
-            set(FMT_PATH "${CMAKE_SOURCE_DIR}/.clang-format")
-        else ()
-            set(FMT_PATH "${CONF_INFRA_DIR}/.clang-format")
-        endif ()
-
         if (ALL_SOURCE_FILES)
-            add_custom_target(format COMMAND ${CLANG_FORMAT_EXE} -i "-style=file:${FMT_PATH}" ${ALL_SOURCE_FILES})
+            add_custom_target(format
+                    COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
+                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                    COMMENT "Formatting source files in ${CONF_CHECK_DIRS}..."
+            )
         endif ()
     endif ()
 
@@ -33,9 +40,14 @@ function(add_dev_tools_targets)
     if (PYTHON_EXE)
         set(TIDY_SCRIPT "${CONF_INFRA_DIR}/scripts/run-clang-tidy.py")
 
-        if (NOT EXISTS "${CMAKE_SOURCE_DIR}/.clang-tidy")
-            configure_file("${CONF_INFRA_DIR}/.clang-tidy" "${CMAKE_SOURCE_DIR}/.clang-tidy" COPYONLY)
+        set(SRC_TIDY "${CONF_INFRA_DIR}/.clang-tidy")
+        set(DST_TIDY "${CMAKE_SOURCE_DIR}/.clang-tidy")
+
+        if (EXISTS ${SRC_TIDY} AND NOT EXISTS ${DST_TIDY})
+            message(STATUS "Creating symlink for clang-tidy")
+            file(CREATE_LINK "${SRC_TIDY}" "${DST_TIDY}" SYMBOLIC)
         endif ()
+
 
         set(HEADER_FILTER "^(")
         foreach (DIR ${CONF_CHECK_DIRS})
