@@ -1,0 +1,4 @@
+# IDE and editor configs
+.vscode/
+.idea/
+*.swp
