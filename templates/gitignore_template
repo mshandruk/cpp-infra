@@ -1,0 +1,13 @@
+# Build and bin
+bin/
+build/
+cmake-build-*
+
+# IDE and editor configs
+.vscode/
+.idea/
+*.swp
+
+# Created from external/cpp-infra
+.clang-format
+.clang-tidy

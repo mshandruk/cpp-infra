@@ -35,6 +35,29 @@ add_dev_tools_targets(
 )
 ```
 
+### 3. Settings .gitignore
+
+During CMake configuration, symbolic link `.clang-format` and `.clang-tidy` are automatically created,
+pointing to the configuration files from `cpp-infra`.
+These symbolic links **should not be committed** to the repository - they are recreated in each
+machine when CMake is run.
+
+If your have a .gitignore file then add these lines to it:
+
+```
+# Created from external/cpp-infra
+.clang-format
+.clang-tidy
+```
+
+If you don't have a .gitignore file, run these commands:
+
+```bash
+   cp external/cpp-infra/templates/gitignore_template .gitignore
+   git add .gitignore
+   git commit -m "chore(git): add .gitignore from cpp-infra template"
+```
+
 ### Don't forget to commit the new submodule
 
 ```bash
