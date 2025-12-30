@@ -95,17 +95,14 @@ changes (e.g., new linting rules or script fixes) into your project:
 1. Update the submodule to the latest version:
 
     ```bash
-    cd external/cpp-infra
-    git checkout master
-    git pull origin master
-    cd ../..
+    git submodule update --remote external/cpp-infra
     ```
 
 2. Commit the update in your main project
 
     ```bash
     git add external/cpp-infra
-    git commit -m "chore(infra): update cpp-infra to the latest version"
+    git commit -am "chore(infra): update cpp-infra to the latest version"
     ```
 
 # License
