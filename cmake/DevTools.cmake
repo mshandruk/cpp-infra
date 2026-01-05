@@ -9,59 +9,56 @@ function(add_dev_tools_targets)
     endif ()
 
     find_program(CLANG_FORMAT_EXE clang-format)
-    if (CLANG_FORMAT_EXE)
-        set(ALL_SOURCE_FILES "")
+    find_program(CLANG_TIDY_EXE clang-tidy)
+    find_program(PYTHON_EXE python3)
 
-        set(SRC_FMT "${CONF_INFRA_DIR}/.clang-format")
-        set(DST_FMT "${CMAKE_SOURCE_DIR}/.clang-format")
-
-        if (EXISTS ${SRC_FMT} AND NOT EXISTS ${DST_FMT})
-            message(STATUS "Creating symlink for clang-format")
-            file(CREATE_LINK "${SRC_FMT}" "${DST_FMT}" SYMBOLIC)
+    foreach (CONFIG .clang-format .clang-tidy)
+        if (EXISTS "${CONF_INFRA_DIR}/${CONFIG}")
+            configure_file("${CONF_INFRA_DIR}/${CONFIG}" "${CMAKE_SOURCE_DIR}/${CONFIG}" COPYONLY)
         endif ()
+    endforeach ()
 
-        foreach (DIR ${CONF_CHECK_DIRS})
-            file(GLOB_RECURSE FOUND_FILES
-                    "${DIR}/*.cpp" "${DIR}/*.hpp" "${DIR}/*.h" "${DIR}/*.inl" "${DIR}/*.cc" "${DIR}/*.cxx"
-            )
-            list(APPEND ALL_SOURCE_FILES ${FOUND_FILES})
+    set(ALL_FILES "")
+    set(TIDY_SOURCES "")
+    foreach (DIR ${CONF_CHECK_DIRS})
+        file(GLOB_RECURSE FOUND_FILES LIST_DIRECTORIES false "${DIR}/*")
+        foreach (F ${FOUND_FILES})
+            if (F MATCHES ".*\\.(hpp|h|inl|cpp|cc|cxx)$")
+                list(APPEND ALL_FILES ${F})
+                if (F MATCHES ".*\\.(cpp|cc|cxx)$")
+                    list(APPEND TIDY_SOURCES ${F})
+                endif ()
+            endif ()
         endforeach ()
+    endforeach ()
 
-        if (ALL_SOURCE_FILES)
-            add_custom_target(format
-                    COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
-                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                    COMMENT "Formatting source files in ${CONF_CHECK_DIRS}..."
-            )
-        endif ()
+    if (CLANG_FORMAT_EXE AND ALL_FILES)
+        add_custom_target(format
+                COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_FILES}
+                COMMENT "Clang-format: fixing your code..."
+                VERBATIM)
     endif ()
 
-    find_program(PYTHON_EXE python3)
-    if (PYTHON_EXE)
+    if (CLANG_TIDY_EXE AND PYTHON_EXE AND TIDY_SOURCES)
         set(TIDY_SCRIPT "${CONF_INFRA_DIR}/scripts/run-clang-tidy.py")
+        cmake_host_system_information(RESULT CORES QUERY NUMBER_OF_LOGICAL_CORES)
 
-        set(SRC_TIDY "${CONF_INFRA_DIR}/.clang-tidy")
-        set(DST_TIDY "${CMAKE_SOURCE_DIR}/.clang-tidy")
+        string(REPLACE "\\" "/" SAFE_ROOT "${CMAKE_SOURCE_DIR}")
+        set(HEADER_FILTER "^${SAFE_ROOT}/.*")
 
-        if (EXISTS ${SRC_TIDY} AND NOT EXISTS ${DST_TIDY})
-            message(STATUS "Creating symlink for clang-tidy")
-            file(CREATE_LINK "${SRC_TIDY}" "${DST_TIDY}" SYMBOLIC)
-        endif ()
-
-
-        set(HEADER_FILTER "^(")
-        foreach (DIR ${CONF_CHECK_DIRS})
-            string(REPLACE "${CMAKE_SOURCE_DIR}" "" REL_DIR "${DIR}")
-            set(HEADER_FILTER "${HEADER_FILTER}${REL_DIR}/|")
-        endforeach ()
-        set(HEADER_FILTER "${HEADER_FILTER}).*")
-        string(REPLACE "/|" "|" HEADER_FILTER "${HEADER_FILTER}")
-
-        add_custom_target(tidy COMMAND ${PYTHON_EXE}
-                "${TIDY_SCRIPT}"
+        add_custom_target(tidy
+                COMMAND ${CMAKE_COMMAND} -E echo "Checking for compilation database..."
+                COMMAND ${CMAKE_COMMAND} -DDB_FILE="${CMAKE_BINARY_DIR}/compile_commands.json"
+                -P "${CONF_INFRA_DIR}/cmake/check_db.cmake"
+                COMMAND ${PYTHON_EXE} "${TIDY_SCRIPT}"
                 -p "${CMAKE_BINARY_DIR}"
+                -j ${CORES}
                 -header-filter="${HEADER_FILTER}"
-                ${CONF_CHECK_DIRS}
+                -quiet
+                ${TIDY_SOURCES}
+                COMMENT "Clang-tidy: checking on ${CORES} cores..."
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                USES_TERMINAL
         )
     endif ()
 endfunction()
