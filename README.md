@@ -33,6 +33,12 @@ add_dev_tools_targets(
         INFRA_DIR "${CMAKE_SOURCE_DIR}/external/cpp-infra"
         CHECK_DIRS "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/tests"
 )
+
+# <--- Link compile_options  --->
+target_link_libraries(${PROJECT_NAME}
+        INTERFACE
+        compile_options
+)
 ```
 
 ### 3. Settings .gitignore

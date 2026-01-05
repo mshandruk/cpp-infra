@@ -1,3 +1,20 @@
+cmake_minimum_required(VERSION 3.16)
+
+add_library(compile_options INTERFACE)
+if (MSVC)
+    target_compile_options(compile_options INTERFACE /W4 /WX /permissive- /utf-8)
+else ()
+    target_compile_options(compile_options INTERFACE
+            -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror
+            -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual
+    )
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(STATUS "[infra] Sanitizers enabled for Debug build")
+        target_compile_options(compile_options INTERFACE -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+        target_link_options(compile_options INTERFACE -fsanitize=address -fsanitize=undefined)
+    endif ()
+endif ()
+
 function(add_dev_tools_targets)
     set(options "")
     set(oneValueArgs INFRA_DIR)
