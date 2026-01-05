@@ -22,7 +22,7 @@ function(add_dev_tools_targets)
 
         foreach (DIR ${CONF_CHECK_DIRS})
             file(GLOB_RECURSE FOUND_FILES
-                    "${DIR}/*.cpp" "${DIR}/*.hpp" "${DIR}/*.h" "${DIR}/*.cc" "${DIR}/*.cxx"
+                    "${DIR}/*.cpp" "${DIR}/*.hpp" "${DIR}/*.h" "${DIR}/*.inl" "${DIR}/*.cc" "${DIR}/*.cxx"
             )
             list(APPEND ALL_SOURCE_FILES ${FOUND_FILES})
         endforeach ()
