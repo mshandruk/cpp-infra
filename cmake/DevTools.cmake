@@ -29,7 +29,7 @@ function(add_dev_tools_targets)
     find_program(CLANG_TIDY_EXE clang-tidy)
     find_program(PYTHON_EXE python3)
 
-    foreach (CONFIG .clang-format .clang-tidy)
+    foreach (CONFIG .clang-format .clang-tidy .clangd)
         if (EXISTS "${CONF_INFRA_DIR}/${CONFIG}")
             configure_file("${CONF_INFRA_DIR}/${CONFIG}" "${CMAKE_SOURCE_DIR}/${CONFIG}" COPYONLY)
         endif ()

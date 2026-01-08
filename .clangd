@@ -1,0 +1,10 @@
+CompileFlags:
+  CompilationDatabase: "build"
+Index:
+  Background: Build
+
+Diagnostics:
+  UnusedIncludes: Strict
+  Suppress: ["drv_unknown_argument"]
+  ClangTidy:
+    Add: ["*"]
