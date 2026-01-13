@@ -7,4 +7,3 @@ Diagnostics:
   UnusedIncludes: Strict
   Suppress: ["drv_unknown_argument"]
   ClangTidy:
-    Add: ["*"]
