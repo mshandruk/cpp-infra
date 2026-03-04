@@ -1,17 +1,33 @@
 cmake_minimum_required(VERSION 3.16)
 
 add_library(compile_options INTERFACE)
+
+option(ENABLE_WERROR "Treat warnings as error" ON)
+option(ENABLE_SANITIZER "Enable sanitizer in debug build" ON)
+
 if (MSVC)
-    target_compile_options(compile_options INTERFACE /W4 /WX /permissive- /utf-8)
+    target_compile_options(compile_options INTERFACE /W4 /permissive- /utf-8)
+    if (ENABLE_WERROR)
+        target_compile_options(compile_options INTERFACE /WX)
+    endif ()
 else ()
     target_compile_options(compile_options INTERFACE
-            -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror
-            -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual
+            -Wall -Wextra -Wshadow -Wpedantic -Wconversion
+            -Wnon-virtual-dtor -Wold-style-cast -Wcast-align
+            -Wunused -Woverloaded-virtual
     )
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        message(STATUS "[infra] Sanitizers enabled for Debug build")
-        target_compile_options(compile_options INTERFACE -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
-        target_link_options(compile_options INTERFACE -fsanitize=address -fsanitize=undefined)
+
+    if (ENABLE_WERROR)
+        target_compile_options(compile_options INTERFACE -Werror)
+    endif ()
+
+    if (ENABLE_SANITIZER)
+        target_compile_options(compile_options INTERFACE
+                $<$<CONFIG:Debug>:-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer>
+        )
+        target_link_options(compile_options INTERFACE
+                $<$<CONFIG:Debug>:-fsanitize=address -fsanitize=undefined>
+        )
     endif ()
 endif ()
 
